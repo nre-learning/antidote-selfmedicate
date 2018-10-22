@@ -7,7 +7,6 @@
 *.retry
 hosts
 venv/
-.idea/
 
 # This is where I placed my updated gcp provider
 terraform.d/
