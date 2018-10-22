@@ -115,6 +115,8 @@ spec:
           value: "/antidote/lessons"
         - name: SYRINGE_IGNORE_DISABLED
           value: "true"
+        - name: SYRINGE_TIER
+          value: "local"
         ports:
         - containerPort: 50099  # GRPC
         - containerPort: 8086   # REST/HTTP
