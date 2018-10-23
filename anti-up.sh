@@ -21,7 +21,7 @@ fi
 echo "Creating minikube cluster. This can take a few minutes, please be patient..."
 minikube stop > /dev/null
 minikube delete > /dev/null
-minikube start --loglevel 0 --cpus 4 --memory 8192 --network-plugin=cni --extra-config=kubelet.network-plugin=cni > /dev/null
+minikube start --cpus 4 --memory 8192 --network-plugin=cni --extra-config=kubelet.network-plugin=cni > /dev/null
 
 echo "Uploading multus configuration..."
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) multus-cni.conf docker@$(minikube ip):/home/docker/multus.conf  > /dev/null
@@ -41,4 +41,4 @@ kubectl create -f antidote-web.yaml > /dev/null
 
 echo "${GREEN}Finished!${NC} Antidote is being spun up right now. Soon, it will be available at:
 
-http://antidote-local:30001/"
+https://antidote-local:30002/"
