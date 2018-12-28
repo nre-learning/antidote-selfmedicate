@@ -113,6 +113,8 @@ spec:
         env:
         - name: SYRINGE_LESSONS
           value: "/antidote/lessons"
+        - name: SYRINGE_DOMAIN
+          value: "localhost"
         - name: SYRINGE_IGNORE_DISABLED
           value: "true"
         - name: SYRINGE_TIER
