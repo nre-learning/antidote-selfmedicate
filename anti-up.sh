@@ -19,14 +19,20 @@ else
 fi
 
 echo "Creating minikube cluster. This can take a few minutes, please be patient..."
+echo "WARNING: This assumes your 'antidote' directory is located at '../antidote'. Please edit as necessary."
 minikube stop > /dev/null
 minikube delete > /dev/null
-minikube start --cpus 4 --memory 8192 --network-plugin=cni --extra-config=kubelet.network-plugin=cni > /dev/null
+minikube start \
+--mount --mount-string="../antidote:/antidote" \
+--mount --mount-string="../plugins/bin:/plugins" \
+--cpus 4 --memory 8192 --network-plugin=cni --extra-config=kubelet.network-plugin=cni > /dev/null
 
 echo "Uploading multus configuration..."
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) multus-cni.conf docker@$(minikube ip):/home/docker/multus.conf  > /dev/null
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) "sudo cp /home/docker/multus.conf /etc/cni/net.d/1-multus.conf"  > /dev/null
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) "sudo systemctl restart localkube"  > /dev/null
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) "sudo curl -L https://github.com/nre-learning/plugins/blob/master/bin/antibridge?raw=true -o /opt/cni/bin/antibridge && sudo chmod a+x /opt/cni/bin/antibridge"  > /dev/null
+
 
 echo "About to modify /etc/hosts to add record for 'antidote-local'. You will now be prompted for your sudo password."
 sudo sed -i '' '/antidote-local.*/d' /etc/hosts  > /dev/null
