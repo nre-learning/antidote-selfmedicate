@@ -1,5 +1,5 @@
 #!/bin/bash
-# set -e
+set -e
 
 PROGNAME=$(basename $0)
 SUBCOMMAND=$1
@@ -44,18 +44,22 @@ sub_resume(){
         echo -e "Please use the ${WHITE}'start'${NC} subcommand instead."
         exit 1
     fi
+
     minikube start \
         --mount --mount-string="$LESSON_DIRECTORY:/antidote" \
         --cpus 4 --memory 8192 --network-plugin=cni --extra-config=kubelet.network-plugin=cni
+
+    echo "About to modify /etc/hosts to add record for 'antidote-local' at IP address $(minikube ip)."
+    echo "You will now be prompted for your sudo password."
+    sudo sed -i '/antidote-local.*/d' /etc/hosts  > /dev/null
+    echo "$(minikube ip)    antidote-local" | sudo tee -a /etc/hosts  > /dev/null
+    echo -e "${GREEN}Finished!${NC} Antidote should now be available at http://antidote-local:30001/"
 }
-
-
 
 sub_start(){
     echo "Running 'start' command."
 
     # TODO(mierdin) Make sure LESSON_DIRECTORY is set
-
 
     if [ -f $HOME/.minikube/config/config.json ]; then
         echo -e "${RED}WARNING - EXISTING MINIKUBE CONFIGURATION DETECTED${NC}"
@@ -77,7 +81,7 @@ sub_start(){
     --mount --mount-string="$LESSON_DIRECTORY:/antidote" \
     --cpus 4 --memory 8192 --network-plugin=cni --extra-config=kubelet.network-plugin=cni
 
-    echo "Uploading multus configuration..."
+    set +e
     scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) \
         manifests/multus-cni.conf docker@$(minikube ip):/home/docker/multus.conf  > /dev/null 2>&1
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) \
@@ -86,13 +90,10 @@ sub_start(){
         "sudo systemctl restart localkube"  > /dev/null 2>&1
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) \
         "sudo curl -L https://github.com/nre-learning/plugins/blob/master/bin/antibridge?raw=true -o /opt/cni/bin/antibridge && sudo chmod a+x /opt/cni/bin/antibridge"  > /dev/null 2>&1
+    set -e
 
-    echo "About to modify /etc/hosts to add record for 'antidote-local'. You will now be prompted for your sudo password."
-    sudo sed -i '/antidote-local.*/d' /etc/hosts  > /dev/null
-    echo "$(minikube ip)    antidote-local" | sudo tee -a /etc/hosts  > /dev/null
-
-    echo  -e  "\nThe minikube cluster ${WHITE}is now online${NC}. Now, we need to add some additional infrastructure components.\n"
-    echo  -e  "\n${YELLOW}This will take some time${NC} - this script will pre-download large images so that you don't have to later. BE PATIENT.\n"
+    echo -e "\nThe minikube cluster ${WHITE}is now online${NC}. Now, we need to add some additional infrastructure components.\n"
+    echo -e "\n${YELLOW}This will take some time${NC} - this script will pre-download large images so that you don't have to later. BE PATIENT.\n"
 
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')" > /dev/null
     kubectl create -f manifests/multusinstall.yml > /dev/null
@@ -100,8 +101,8 @@ sub_start(){
     print_progress() {
         percentage=$1
         chars=$(echo "20 * $percentage"/1| bc)
-        v=$(printf "%-${chars}s" "#")
-        s=$(printf "%-$((20 - chars))s" "-")
+        v=$(printf "%-${chars}s")
+        s=$(printf "%-$((20 - chars))s")
         echo "${v// /#}""${s// /-}"
     }
 
@@ -150,36 +151,24 @@ sub_start(){
         echo -ne $(print_progress 1) "${GREEN}Done.${NC}\n"
     done
 
-    # imgcount=0
-    # while [ $imgcount -lt ${#images[@]} ]
-    # do
-    #     imgcount=0
-    #     pulled_images=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) "docker image list --format '{{.Repository}}:{{.Tag}}'" 2> /dev/null)
-        
-    #     for i in "${images[@]}"
-    #     do
-    #         thisimage=$(echo $pulled_images | grep $i)
-    #         if [ ! -z "$thisimage" ]
-    #         then
-    #             imgcount=$((imgcount + 1))
-    #         fi
-    #     done
-    #     echo "COUNT -  $imgcount / ${#images[@]}"
-    # done
+    echo "About to modify /etc/hosts to add record for 'antidote-local' at IP address $(minikube ip)."
+    echo "You will now be prompted for your sudo password."
+    sudo sed -i '/antidote-local.*/d' /etc/hosts  > /dev/null
+    echo "$(minikube ip)    antidote-local" | sudo tee -a /etc/hosts  > /dev/null
 
-    echo -e "${GREEN}Finished!${NC} Antidote is being spun up right now. Soon, it will be available at:
-
-    http://antidote-local:30001/"
-
+    echo -e "${GREEN}Finished!${NC} Antidote should now be available at http://antidote-local:30001/"
 }
 
 sub_reload(){
     echo "Reloading lesson content, please wait..."
     kubectl delete pod $(kubectl get pods | grep syringe | awk '{ print $1 }') >> /dev/null
     echo -e "${GREEN}Done.${NC}"
+    echo -e "${YELLOW}NOTE${NC} - Syringe may need to clean up old namespaces before serving additional requests."
+    echo -e "Please give it some time before trying to launch another lesson."
 }
 
 sub_stop(){
+    echo -e "About to stop minikube. You may safely ignore any messages that say 'Errors occurred deleting mount process'"
     minikube stop
 }
 
