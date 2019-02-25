@@ -7,6 +7,7 @@ LESSON_DIRECTORY=$2
 
 RED='\033[31m'
 GREEN='\033[32m'
+YELLOW='\033[33m'
 WHITE='\033[37m'
 NC='\033[0m'
 
@@ -48,6 +49,8 @@ sub_resume(){
         --cpus 4 --memory 8192 --network-plugin=cni --extra-config=kubelet.network-plugin=cni
 }
 
+
+
 sub_start(){
     echo "Running 'start' command."
 
@@ -76,26 +79,93 @@ sub_start(){
 
     echo "Uploading multus configuration..."
     scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) \
-        manifests/multus-cni.conf docker@$(minikube ip):/home/docker/multus.conf  > /dev/null
+        manifests/multus-cni.conf docker@$(minikube ip):/home/docker/multus.conf  > /dev/null 2>&1
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) \
-        "sudo cp /home/docker/multus.conf /etc/cni/net.d/1-multus.conf"  > /dev/null
+        "sudo cp /home/docker/multus.conf /etc/cni/net.d/1-multus.conf"  > /dev/null 2>&1
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) \
-        "sudo systemctl restart localkube"  > /dev/null
+        "sudo systemctl restart localkube"  > /dev/null 2>&1
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) \
-        "sudo curl -L https://github.com/nre-learning/plugins/blob/master/bin/antibridge?raw=true -o /opt/cni/bin/antibridge && sudo chmod a+x /opt/cni/bin/antibridge"  > /dev/null
+        "sudo curl -L https://github.com/nre-learning/plugins/blob/master/bin/antibridge?raw=true -o /opt/cni/bin/antibridge && sudo chmod a+x /opt/cni/bin/antibridge"  > /dev/null 2>&1
 
     echo "About to modify /etc/hosts to add record for 'antidote-local'. You will now be prompted for your sudo password."
     sudo sed -i '/antidote-local.*/d' /etc/hosts  > /dev/null
     echo "$(minikube ip)    antidote-local" | sudo tee -a /etc/hosts  > /dev/null
 
-    echo "Adding additional infrastructure components..."
+    echo  -e  "\nThe minikube cluster ${WHITE}is now online${NC}. Now, we need to add some additional infrastructure components.\n"
+    echo  -e  "\n${YELLOW}This will take some time${NC} - this script will pre-download large images so that you don't have to later. BE PATIENT.\n"
+
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')" > /dev/null
     kubectl create -f manifests/multusinstall.yml > /dev/null
-    
-    echo "Uploading platform manifests..."
+
+    print_progress() {
+        percentage=$1
+        chars=$(echo "20 * $percentage"/1| bc)
+        v=$(printf "%-${chars}s" "#")
+        s=$(printf "%-$((20 - chars))s" "-")
+        echo "${v// /#}""${s// /-}"
+    }
+
+    running_system_pods=0
+    total_system_pods=$(kubectl get pods -n=kube-system | tail -n +2 | wc -l)
+    while [ $running_system_pods -lt $total_system_pods ]
+    do
+        running_system_pods=$(kubectl get pods -n=kube-system | grep Running | wc -l)
+        percentage="$( echo "$running_system_pods/$total_system_pods" | bc -l )"
+        echo -ne $(print_progress $percentage) "${YELLOW}Installing additional infrastructure components...${NC}\r"
+        sleep 1
+    done
+
+    # Clear line and print finished progress
+    echo -ne "$pc%\033[0K\r"
+    echo -ne $(print_progress 1) "${GREEN}Done.${NC}\n"
+
     kubectl create -f manifests/nginx-controller.yaml > /dev/null
     kubectl create -f manifests/syringe-k8s.yaml > /dev/null
     kubectl create -f manifests/antidote-web.yaml > /dev/null
+
+    running_platform_pods=0
+    total_platform_pods=$(kubectl get pods | tail -n +2 | wc -l)
+    while [ $running_platform_pods -lt $total_platform_pods ]
+    do
+        running_platform_pods=$(kubectl get pods | grep Running | wc -l)
+        percentage="$( echo "$running_platform_pods/$total_platform_pods" | bc -l )"
+        echo -ne $(print_progress $percentage) "${YELLOW}Starting the antidote platform...${NC}\r"
+        sleep 1
+    done
+
+    # Clear line and print finished progress
+    echo -ne "$pc%\033[0K\r"
+    echo -ne $(print_progress 1) "${GREEN}Done.${NC}\n"
+
+    # Pre-download large common images
+    declare -a images=("vqfx:snap1" "vqfx:snap2" "vqfx:snap3" "utility")
+    for i in "${images[@]}"
+    do
+        echo -ne $(print_progress $percentage) "${YELLOW}Pre-emptively pulling image antidotelabs/$i...${NC}\r"
+        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) \
+                "docker pull antidotelabs/$i" > /dev/null 2>&1
+
+        # Clear line and print finished progress
+        echo -ne "$pc%\033[0K\r"
+        echo -ne $(print_progress 1) "${GREEN}Done.${NC}\n"
+    done
+
+    # imgcount=0
+    # while [ $imgcount -lt ${#images[@]} ]
+    # do
+    #     imgcount=0
+    #     pulled_images=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) "docker image list --format '{{.Repository}}:{{.Tag}}'" 2> /dev/null)
+        
+    #     for i in "${images[@]}"
+    #     do
+    #         thisimage=$(echo $pulled_images | grep $i)
+    #         if [ ! -z "$thisimage" ]
+    #         then
+    #             imgcount=$((imgcount + 1))
+    #         fi
+    #     done
+    #     echo "COUNT -  $imgcount / ${#images[@]}"
+    # done
 
     echo -e "${GREEN}Finished!${NC} Antidote is being spun up right now. Soon, it will be available at:
 
