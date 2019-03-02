@@ -3,7 +3,7 @@ set -e
 
 PROGNAME=$(basename $0)
 SUBCOMMAND=$1
-LESSON_DIRECTORY=$2
+LESSON_DIRECTORY="../antidote"
 
 RED='\033[31m'
 GREEN='\033[32m'
@@ -17,8 +17,6 @@ if [ $? -ne 0 ]; then
     echo "Minikube not found. Please follow installation instructions at: https://antidoteproject.readthedocs.io/en/latest/building/buildlocal.html"
     exit 1
 fi
-# TODO Also check for syrctl and virtualbox
-
 
 sub_help(){
     echo "Usage: $PROGNAME <subcommand> [options]"
@@ -29,7 +27,7 @@ sub_help(){
     echo "    resume   Resume stopped Antidote instance"
     echo ""
     echo "options:"
-    echo "-h, --help                show brief help"
+    echo "-h    show brief help"
     echo ""
     echo "For help with each subcommand run:"
     echo "$PROGNAME <subcommand> -h|--help"
@@ -57,15 +55,22 @@ sub_resume(){
 }
 
 sub_start(){
-    echo "Running 'start' command."
 
-    # TODO(mierdin) Make sure LESSON_DIRECTORY is set
+    if [ ! -d "$LESSON_DIRECTORY/lessons" ]; then
+        echo -e "${RED}Error${NC} - $LESSON_DIRECTORY doesn't look like a proper curriculum directory."
+        echo -e "Either this directory wasn't found, or the subdirectory 'lessons' within that directory wasn't found.\n"
+        echo -e "In either case, this script cannot continue. Please either place the appropriate directory in place, or"
+        echo -e "edit the LESSON_DIRECTORY variable at the top of this script."
+        exit 1
+    fi
 
     if [ -f $HOME/.minikube/config/config.json ]; then
         echo -e "${RED}WARNING - EXISTING MINIKUBE CONFIGURATION DETECTED${NC}"
         echo -e "This command is designed to start a new minikube cluster from scratch, and must delete any existing configurations in order to move forward."
         read -p "Press any key to DESTROY THE EXISTING CLUSTER and create a new one for antidote (Ctrl+C will escape)."
+        set +e
         minikube delete > /dev/null
+        set -e
     fi
 
     if [ ! -f ~/.kube/premselfmedicate_bkp ]; then
@@ -172,17 +177,18 @@ sub_stop(){
     minikube stop
 }
 
-# Handle optional flags
-while :; do
-    case $1 in
-        -h|--help)
+while getopts "h" OPTION
+do
+	case $OPTION in
+		h)
             sub_help
             exit
             ;;
-        *)
-            break
-    esac
-    shift
+		\?)
+			sub_help
+			exit
+			;;
+	esac
 done
 
 # Direct to appropriate subcommand
