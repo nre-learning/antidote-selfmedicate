@@ -17,8 +17,6 @@ if [ $? -ne 0 ]; then
     echo "Minikube not found. Please follow installation instructions at: https://antidoteproject.readthedocs.io/en/latest/building/buildlocal.html"
     exit 1
 fi
-# TODO Also check for syrctl and virtualbox
-
 
 sub_help(){
     echo "Usage: $PROGNAME <subcommand> [options]"
@@ -37,6 +35,7 @@ sub_help(){
 }
   
 sub_resume(){
+
     minikube config set WantReportErrorPrompt false
     if [ ! -f $HOME/.minikube/config/config.json ]; then
         echo -e "${RED}No existing cluster detected.${NC}"
@@ -49,13 +48,13 @@ sub_resume(){
         --cpus 4 --memory 8192 --network-plugin=cni --extra-config=kubelet.network-plugin=cni
 }
 
-
-
 sub_start(){
-    echo "Running 'start' command."
 
-    # TODO(mierdin) Make sure LESSON_DIRECTORY is set
-
+    if [ -z "$LESSON_DIRECTORY" ]
+    then
+        echo -e "${RED}Error${NC} - Must provide lesson directory as the final parameter"
+        exit 1
+    fi
 
     if [ -f $HOME/.minikube/config/config.json ]; then
         echo -e "${RED}WARNING - EXISTING MINIKUBE CONFIGURATION DETECTED${NC}"
@@ -99,9 +98,9 @@ sub_start(){
 
     print_progress() {
         percentage=$1
-        chars=$(echo "20 * $percentage"/1| bc)
+        chars=$(echo "40 * $percentage"/1| bc)
         v=$(printf "%-${chars}s" "#")
-        s=$(printf "%-$((20 - chars))s" "-")
+        s=$(printf "%-$((40 - chars))s")
         echo "${v// /#}""${s// /-}"
     }
 
@@ -150,23 +149,6 @@ sub_start(){
         echo -ne $(print_progress 1) "${GREEN}Done.${NC}\n"
     done
 
-    # imgcount=0
-    # while [ $imgcount -lt ${#images[@]} ]
-    # do
-    #     imgcount=0
-    #     pulled_images=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) "docker image list --format '{{.Repository}}:{{.Tag}}'" 2> /dev/null)
-        
-    #     for i in "${images[@]}"
-    #     do
-    #         thisimage=$(echo $pulled_images | grep $i)
-    #         if [ ! -z "$thisimage" ]
-    #         then
-    #             imgcount=$((imgcount + 1))
-    #         fi
-    #     done
-    #     echo "COUNT -  $imgcount / ${#images[@]}"
-    # done
-
     echo -e "${GREEN}Finished!${NC} Antidote is being spun up right now. Soon, it will be available at:
 
     http://antidote-local:30001/"
@@ -176,7 +158,12 @@ sub_start(){
 sub_reload(){
     echo "Reloading lesson content, please wait..."
     kubectl delete pod $(kubectl get pods | grep syringe | awk '{ print $1 }') >> /dev/null
-    echo -e "${GREEN}Done.${NC}"
+    while [ $(kubectl get ns -L syringeManaged | grep yes | wc -l) -gt 0 ]
+    do
+        echo "Waiting for running lessons to terminate..."
+        sleep 1
+    done
+    echo -e "${GREEN}Reload complete.${NC}"
 }
 
 sub_stop(){
