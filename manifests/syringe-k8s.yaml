@@ -5,47 +5,10 @@ metadata:
   name: syringesa
 
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: git-clone
-data:
-  git-clone.sh: |
-    #!/bin/sh -e
-    REPO=$1
-    REF=$2
-    DIR=$3
-    # Init Containers will re-run on Pod restart. Remove the directory's contents
-    # and reprovision when this happens.
-    if [ -d "$DIR" ]; then
-        rm -rf $( find $DIR -mindepth 1 )
-    fi
-    git clone $REPO $DIR
-    cd $DIR
-    git checkout --force $REF
-
----
-# TODO(mierdin): This could probably use some pruning
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: syringerole
-# rules:
-# - apiGroups:
-#   - ""
-#   - "extensions"
-#   - "customresourcedefinitions"
-#   resources:
-#   - pods
-#   - services
-#   - networks
-#   - namespaces
-#   - customresourcedefinitions
-#   verbs:
-#   - create
-#   - list
-#   - get
-#   - delete
 rules:
 - apiGroups:
   - '*'
@@ -57,7 +20,6 @@ rules:
   - '*'
   verbs:
   - '*'
-
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -90,64 +52,34 @@ spec:
         app: syringe
         antidote_role: infra
     spec:
-      initContainers:
-      - name: git-clone
-        image: alpine/git # Any image with git will do
-        command:
-        - /usr/local/git/git-clone.sh
-        args:
-        - "https://github.com/nre-learning/antidote.git"
-        - "master"
-        - "/antidote"
-        volumeMounts:
-        - name: git-clone
-          mountPath: /usr/local/git
-        - name: git-volume  #?
-          mountPath: /antidote
-      # Might need an admission controller for this
       serviceAccount: syringesa
       containers:
       - name: syringe
         image: antidotelabs/syringe:latest
         imagePullPolicy: Always
         env:
+        - name: SYRINGE_DOMAIN
+          value: "localhost:30002"
         - name: SYRINGE_LESSONS
           value: "/antidote/lessons"
         - name: SYRINGE_DOMAIN
           value: "localhost"
-        - name: SYRINGE_IGNORE_DISABLED
-          value: "true"
         - name: SYRINGE_TIER
           value: "local"
-        - name: SYRINGE_LESSON_REPO_REMOTE
-          value: "https://github.com/nre-learning/antidote.git"
-        - name: SYRINGE_LESSON_REPO_BRANCH
-          value: "master"
         - name: SYRINGE_LESSON_REPO_DIR
           value: "/antidote"
+        - name: SYRINGE_LESSONS_LOCAL
+          value: "true"
         ports:
         - containerPort: 50099  # GRPC
         - containerPort: 8086   # REST/HTTP
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 8086
         volumeMounts:
           - mountPath: /antidote
-            name: git-volume
+            name: host-volume
       volumes:
-        - name: git-volume
-          emptyDir: {}
-        - name: git-clone
-          configMap:
-            name: git-clone
-            defaultMode: 0755
-
-# /var/run/secrets/kubernetes.io/serviceaccount
-
-# kubectl create serviceaccount syringesa
-# kubectl describe serviceaccount syringesa
-# kubectl get secret syringesa-token-hjdjv -oyaml
+        - name: host-volume
+          hostPath:
+            path: "/antidote"
 
 ---
 kind: Service
@@ -179,8 +111,6 @@ metadata:
     ingress.kubernetes.io/force-ssl-redirect: "false"
     ingress.kubernetes.io/rewrite-target: "/"
     nginx.ingress.kubernetes.io/rewrite-target: "/"
-    # ingress.kubernetes.io/limit-connections
-    # ingress.kubernetes.io/limit-rps
   name: syringe-ingress
   namespace: default
 spec:
