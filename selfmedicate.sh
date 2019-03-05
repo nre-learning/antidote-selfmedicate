@@ -1,9 +1,9 @@
 #!/bin/bash
-# set -e
+set -e
 
 PROGNAME=$(basename $0)
 SUBCOMMAND=$1
-LESSON_DIRECTORY=$2
+LESSON_DIRECTORY="../antidote"
 
 RED='\033[31m'
 GREEN='\033[32m'
@@ -27,7 +27,7 @@ sub_help(){
     echo "    resume   Resume stopped Antidote instance"
     echo ""
     echo "options:"
-    echo "-h, --help                show brief help"
+    echo "-h    show brief help"
     echo ""
     echo "For help with each subcommand run:"
     echo "$PROGNAME <subcommand> -h|--help"
@@ -43,9 +43,16 @@ sub_resume(){
         echo -e "Please use the ${WHITE}'start'${NC} subcommand instead."
         exit 1
     fi
+
     minikube start \
         --mount --mount-string="$LESSON_DIRECTORY:/antidote" \
         --cpus 4 --memory 8192 --network-plugin=cni --extra-config=kubelet.network-plugin=cni
+
+    echo "About to modify /etc/hosts to add record for 'antidote-local' at IP address $(minikube ip)."
+    echo "You will now be prompted for your sudo password."
+    sudo sed -i '/antidote-local.*/d' /etc/hosts  > /dev/null
+    echo "$(minikube ip)    antidote-local" | sudo tee -a /etc/hosts  > /dev/null
+    echo -e "${GREEN}Finished!${NC} Antidote should now be available at http://antidote-local:30001/"
 }
 
 sub_start(){
@@ -53,6 +60,13 @@ sub_start(){
     if [ -z "$LESSON_DIRECTORY" ]
     then
         echo -e "${RED}Error${NC} - Must provide lesson directory as the final parameter"
+    fi
+
+    if [ ! -d "$LESSON_DIRECTORY/lessons" ]; then
+        echo -e "${RED}Error${NC} - $LESSON_DIRECTORY doesn't look like a proper curriculum directory."
+        echo -e "Either this directory wasn't found, or the subdirectory 'lessons' within that directory wasn't found.\n"
+        echo -e "In either case, this script cannot continue. Please either place the appropriate directory in place, or"
+        echo -e "edit the LESSON_DIRECTORY variable at the top of this script."
         exit 1
     fi
 
@@ -60,7 +74,9 @@ sub_start(){
         echo -e "${RED}WARNING - EXISTING MINIKUBE CONFIGURATION DETECTED${NC}"
         echo -e "This command is designed to start a new minikube cluster from scratch, and must delete any existing configurations in order to move forward."
         read -p "Press any key to DESTROY THE EXISTING CLUSTER and create a new one for antidote (Ctrl+C will escape)."
+        set +e
         minikube delete > /dev/null
+        set -e
     fi
 
     if [ ! -f ~/.kube/premselfmedicate_bkp ]; then
@@ -76,7 +92,7 @@ sub_start(){
     --mount --mount-string="$LESSON_DIRECTORY:/antidote" \
     --cpus 4 --memory 8192 --network-plugin=cni --extra-config=kubelet.network-plugin=cni
 
-    echo "Uploading multus configuration..."
+    set +e
     scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) \
         manifests/multus-cni.conf docker@$(minikube ip):/home/docker/multus.conf  > /dev/null 2>&1
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) \
@@ -85,13 +101,10 @@ sub_start(){
         "sudo systemctl restart localkube"  > /dev/null 2>&1
     ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) -t docker@$(minikube ip) \
         "sudo curl -L https://github.com/nre-learning/plugins/blob/master/bin/antibridge?raw=true -o /opt/cni/bin/antibridge && sudo chmod a+x /opt/cni/bin/antibridge"  > /dev/null 2>&1
+    set -e
 
-    echo "About to modify /etc/hosts to add record for 'antidote-local'. You will now be prompted for your sudo password."
-    sudo sed -i '/antidote-local.*/d' /etc/hosts  > /dev/null
-    echo "$(minikube ip)    antidote-local" | sudo tee -a /etc/hosts  > /dev/null
-
-    echo  -e  "\nThe minikube cluster ${WHITE}is now online${NC}. Now, we need to add some additional infrastructure components.\n"
-    echo  -e  "\n${YELLOW}This will take some time${NC} - this script will pre-download large images so that you don't have to later. BE PATIENT.\n"
+    echo -e "\nThe minikube cluster ${WHITE}is now online${NC}. Now, we need to add some additional infrastructure components.\n"
+    echo -e "\n${YELLOW}This will take some time${NC} - this script will pre-download large images so that you don't have to later. BE PATIENT.\n"
 
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')" > /dev/null
     kubectl create -f manifests/multusinstall.yml > /dev/null
@@ -149,10 +162,12 @@ sub_start(){
         echo -ne $(print_progress 1) "${GREEN}Done.${NC}\n"
     done
 
-    echo -e "${GREEN}Finished!${NC} Antidote is being spun up right now. Soon, it will be available at:
+    echo "About to modify /etc/hosts to add record for 'antidote-local' at IP address $(minikube ip)."
+    echo "You will now be prompted for your sudo password."
+    sudo sed -i '/antidote-local.*/d' /etc/hosts  > /dev/null
+    echo "$(minikube ip)    antidote-local" | sudo tee -a /etc/hosts  > /dev/null
 
-    http://antidote-local:30001/"
-
+    echo -e "${GREEN}Finished!${NC} Antidote should now be available at http://antidote-local:30001/"
 }
 
 sub_reload(){
@@ -167,20 +182,22 @@ sub_reload(){
 }
 
 sub_stop(){
+    echo -e "About to stop minikube. You may safely ignore any messages that say 'Errors occurred deleting mount process'"
     minikube stop
 }
 
-# Handle optional flags
-while :; do
-    case $1 in
-        -h|--help)
+while getopts "h" OPTION
+do
+	case $OPTION in
+		h)
             sub_help
             exit
             ;;
-        *)
-            break
-    esac
-    shift
+		\?)
+			sub_help
+			exit
+			;;
+	esac
 done
 
 # Direct to appropriate subcommand
