@@ -62,6 +62,8 @@ spec:
           value: "localhost:30002"
         - name: SYRINGE_LESSONS
           value: "/antidote/lessons"
+        - name: SYRINGE_DOMAIN
+          value: "localhost"
         - name: SYRINGE_TIER
           value: "local"
         - name: SYRINGE_LESSON_REPO_DIR
