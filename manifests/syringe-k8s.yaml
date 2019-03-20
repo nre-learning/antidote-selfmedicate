@@ -55,7 +55,7 @@ spec:
       serviceAccount: syringesa
       containers:
       - name: syringe
-        image: antidotelabs/syringe:release-v0.3.0
+        image: antidotelabs/syringe:latest
         imagePullPolicy: Always
         env:
         - name: SYRINGE_DOMAIN
