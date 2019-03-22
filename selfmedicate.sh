@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 PROGNAME=$(basename $0)
 SUBCOMMAND=$1
@@ -17,6 +16,8 @@ if [ $? -ne 0 ]; then
     echo "Minikube not found. Please follow installation instructions at: https://antidoteproject.readthedocs.io/en/latest/building/buildlocal.html"
     exit 1
 fi
+
+set -e
 
 sub_help(){
     echo "Usage: $PROGNAME <subcommand> [options]"
