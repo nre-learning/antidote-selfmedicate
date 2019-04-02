@@ -80,11 +80,13 @@ sub_start(){
         set -e
     fi
 
-    if [ ! -f ~/.kube/premselfmedicate_bkp ]; then
-        echo "Backing up existing kubeconfig to ~/.kube/preminikube_bkp..."
-        cp ~/.kube/config ~/.kube/premselfmedicate_bkp
-    else
-        echo "Existing kubeconfig backup found, not re-copying."
+    if [ -d "~/.kube/config" ]; then
+        if [ ! -f ~/.kube/premselfmedicate_bkp ]; then
+            echo "Backing up existing kubeconfig to ~/.kube/premselfmedicate_bkp..."
+            cp ~/.kube/config ~/.kube/premselfmedicate_bkp
+        else
+            echo "Existing kubeconfig backup found, not re-copying."
+        fi
     fi
 
     echo "Creating minikube cluster. This can take a few minutes, please be patient..."
