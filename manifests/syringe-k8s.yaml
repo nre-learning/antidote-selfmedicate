@@ -58,16 +58,12 @@ spec:
         image: antidotelabs/syringe:latest
         imagePullPolicy: Always
         env:
-        - name: SYRINGE_DOMAIN
-          value: "localhost:30002"
-        - name: SYRINGE_LESSONS
-          value: "/antidote/lessons"
+        - name: SYRINGE_CURRICULUM
+          value: "/antidote"
         - name: SYRINGE_DOMAIN
           value: "localhost"
         - name: SYRINGE_TIER
           value: "local"
-        - name: SYRINGE_LESSON_REPO_DIR
-          value: "/antidote"
         - name: SYRINGE_LESSONS_LOCAL
           value: "true"
         ports:
