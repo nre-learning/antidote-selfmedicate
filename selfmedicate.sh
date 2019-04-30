@@ -2,7 +2,7 @@
 
 PROGNAME=$(basename $0)
 SUBCOMMAND=$1
-LESSON_DIRECTORY="../antidote"
+LESSON_DIRECTORY="../nrelabs-curriculum"
 
 RED='\033[31m'
 GREEN='\033[32m'
