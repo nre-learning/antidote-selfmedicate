@@ -61,7 +61,7 @@ spec:
         - name: SYRINGE_CURRICULUM
           value: "/antidote"
         - name: SYRINGE_DOMAIN
-          value: "localhost"
+          value: "antidote-local"
         - name: SYRINGE_TIER
           value: "local"
         - name: SYRINGE_LESSONS_LOCAL
