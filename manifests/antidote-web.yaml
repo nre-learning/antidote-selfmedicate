@@ -19,7 +19,7 @@ spec:
         ports:
         - containerPort: 4822
       - name: antidote-web
-        image: antidotelabs/antidote-web:release-v0.3.0
+        image: antidotelabs/antidote-web:latest
         imagePullPolicy: Always
         env:
         - name: GUACD_HOSTNAME
