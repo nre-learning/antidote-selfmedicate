@@ -64,7 +64,7 @@ spec:
           value: "antidote-local"
         - name: SYRINGE_TIER
           value: "local"
-        - name: SYRINGE_LESSONS_LOCAL
+        - name: SYRINGE_CURRICULUM_LOCAL
           value: "true"
         ports:
         - containerPort: 50099  # GRPC
