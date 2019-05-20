@@ -2,7 +2,17 @@
 
 PROGNAME=$(basename $0)
 SUBCOMMAND=$1
-LESSON_DIRECTORY="../nrelabs-curriculum"
+
+if [ -f $HOME/.antidote/config ]
+then
+    . $HOME/.antidote/config
+fi
+
+CPUS=${CPU:=2}
+MEMORY=${MEMORY:=8192}
+VMDRIVER=${VMDRIVER:="virtualbox"}
+LESSON_DIRECTORY=${LESSON_DIRECTORY:="../nrelabs-curriculum"}
+
 
 RED='\033[31m'
 GREEN='\033[32m'
@@ -47,7 +57,7 @@ sub_resume(){
 
     minikube start \
         --mount --mount-string="$LESSON_DIRECTORY:/antidote" \
-        --cpus 4 --memory 8192 --network-plugin=cni --extra-config=kubelet.network-plugin=cni
+        --cpus $CPUS --memory $MEMORY --vm-driver $VMDRIVER --network-plugin=cni --extra-config=kubelet.network-plugin=cni
 
     echo "About to modify /etc/hosts to add record for 'antidote-local' at IP address $(minikube ip)."
     echo "You will now be prompted for your sudo password."
@@ -93,7 +103,7 @@ sub_start(){
     minikube config set WantReportErrorPrompt false
     minikube start \
     --mount --mount-string="$LESSON_DIRECTORY:/antidote" \
-    --cpus 4 --memory 8192 --network-plugin=cni --extra-config=kubelet.network-plugin=cni
+    --cpus $CPUS --memory $MEMORY --vm-driver $VMDRIVER --network-plugin=cni --extra-config=kubelet.network-plugin=cni
 
     set +e
     scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $(minikube ssh-key) \
