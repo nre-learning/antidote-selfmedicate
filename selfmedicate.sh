@@ -184,6 +184,29 @@ sub_start(){
     echo -e "${GREEN}Finished!${NC} Antidote should now be available at http://antidote-local:30001/"
 }
 
+sub_debug(){
+    debugs=(
+        "kubectl -n=ptr get pods --all-namespaces"
+        "kubectl -n=ptr describe pods --all-namespaces"
+        "kubectl -n=ptr logs $(kubectl -n=ptr get pods | awk '/syringe/ {print $1;exit}')"
+    )
+
+    echo "Please wait while debug information is gathered..."
+
+    rm -f selfmedicatedebug && touch selfmedicatedebug
+    for i in "${debugs[@]}"
+    do
+        echo -e "\n==============================" >> selfmedicatedebug
+        echo "$i" >> selfmedicatedebug
+        echo -e "==============================\n" >> selfmedicatedebug
+        
+        eval $i >> selfmedicatedebug
+        # date
+    done
+
+    echo "Done."
+}
+
 sub_reload(){
     echo "Reloading lesson content, please wait..."
     kubectl delete pod $(kubectl get pods | grep syringe | awk '{ print $1 }') >> /dev/null
