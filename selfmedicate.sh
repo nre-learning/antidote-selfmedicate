@@ -3,8 +3,15 @@
 PROGNAME=$(basename $0)
 SUBCOMMAND=$1
 
+RED='\033[31m'
+GREEN='\033[32m'
+YELLOW='\033[33m'
+WHITE='\033[37m'
+NC='\033[0m'
+
 if [ -f $HOME/.antidote/config ]
 then
+    echo -e "${YELLOW}Reading your preferences from '$HOME/.antidote/config'.${NC}"
     . $HOME/.antidote/config
 fi
 
@@ -14,12 +21,7 @@ VMDRIVER=${VMDRIVER:="virtualbox"}
 LESSON_DIRECTORY=${LESSON_DIRECTORY:="../nrelabs-curriculum"}
 MINIKUBE=${MINIKUBE:="minikube"}
 KUBECTL=${KUBECTL:="kubectl"}
-
-RED='\033[31m'
-GREEN='\033[32m'
-YELLOW='\033[33m'
-WHITE='\033[37m'
-NC='\033[0m'
+PRELOADED_IMAGES=${PRELOADED_IMAGES:="vqfx:snap1 vqfx:snap2 vqfx:snap3 utility"}
 
 # Checking for prerequisites
 command -v $MINIKUBE > /dev/null
@@ -164,8 +166,7 @@ sub_start(){
     echo -ne $(print_progress 1) "${GREEN}Done.${NC}\n"
 
     # Pre-download large common images
-    declare -a images=("vqfx:snap1" "vqfx:snap2" "vqfx:snap3" "utility")
-    for i in "${images[@]}"
+    for i in $(echo $PRELOADED_IMAGES)
     do
         echo -ne $(print_progress $percentage) "${YELLOW}Pre-emptively pulling image antidotelabs/$i...${NC}\r"
         ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $($MINIKUBE ssh-key) -t docker@$($MINIKUBE ip) \
