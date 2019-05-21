@@ -217,6 +217,9 @@ done
 # Direct to appropriate subcommand
 subcommand=$1
 case $subcommand in
+    "")
+        sub_help
+        ;;
     *)
         shift
         sub_${subcommand} $@
