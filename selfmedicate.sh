@@ -15,7 +15,7 @@ then
     . $HOME/.antidote/config
 fi
 
-CPUS=${CPU:=2}
+CPUS=${CPUS:=2}
 MEMORY=${MEMORY:=8192}
 VMDRIVER=${VMDRIVER:="virtualbox"}
 LESSON_DIRECTORY=${LESSON_DIRECTORY:="../nrelabs-curriculum"}
