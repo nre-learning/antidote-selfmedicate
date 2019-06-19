@@ -64,7 +64,8 @@ sub_resume(){
 
     echo "About to modify /etc/hosts to add record for 'antidote-local' at IP address $($MINIKUBE ip)."
     echo "You will now be prompted for your sudo password."
-    sudo sed -i '/antidote-local.*/d' /etc/hosts  > /dev/null
+    sudo sed '/antidote-local.*/d' /etc/hosts  > /tmp/hosts.tmp
+    sudo mv /tmp/hosts.tmp /etc/hosts
     echo "$($MINIKUBE ip)    antidote-local" | sudo tee -a /etc/hosts  > /dev/null
     echo -e "${GREEN}Finished!${NC} Antidote should now be available at http://antidote-local:30001/"
 }
