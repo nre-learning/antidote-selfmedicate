@@ -1,5 +1,12 @@
 #!/bin/bash
 
+
+# Install KVM, and make sure KVM kernel mods are installed
+#
+# sudo minikube start --vm-driver none
+
+
+
 PROGNAME=$(basename $0)
 SUBCOMMAND=$1
 
@@ -186,9 +193,12 @@ sub_start(){
 
 sub_debug(){
     debugs=(
-        "kubectl -n=ptr get pods --all-namespaces"
-        "kubectl -n=ptr describe pods --all-namespaces"
-        "kubectl -n=ptr logs $(kubectl -n=ptr get pods | awk '/syringe/ {print $1;exit}')"
+        "kubectl describe pods --all-namespaces"
+        "kubectl describe services --all-namespaces"
+        "kubectl describe network-attachment-definitions --all-namespaces"
+        "kubectl -logs $(kubectl get pods | awk '/syringe/ {print $1;exit}')"
+
+        "kubectl -n=kube-system logs $(kubectl -n=kube-system get pods | awk '/multus/ {print $1;exit}')"
     )
 
     echo "Please wait while debug information is gathered..."
