@@ -21,7 +21,7 @@ VMDRIVER=${VMDRIVER:="virtualbox"}
 LESSON_DIRECTORY=${LESSON_DIRECTORY:="../nrelabs-curriculum"}
 MINIKUBE=${MINIKUBE:="minikube"}
 KUBECTL=${KUBECTL:="kubectl"}
-PRELOADED_IMAGES=${PRELOADED_IMAGES:="vqfx:snap1 vqfx:snap2 vqfx:snap3 utility"}
+PRELOADED_IMAGES=${PRELOADED_IMAGES:="vqfx-snap1 vqfx-snap2 vqfx-snap3 utility"}
 
 # Checking for prerequisites
 command -v $MINIKUBE > /dev/null
