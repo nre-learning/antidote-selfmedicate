@@ -17,9 +17,9 @@ fi
 
 CPUS=${CPUS:=2}
 MEMORY=${MEMORY:=8192}
-VMDRIVER=${VMDRIVER:="virtualbox"}
+VMDRIVER=${VMDRIVER:="none"}
 LESSON_DIRECTORY=${LESSON_DIRECTORY:="../nrelabs-curriculum"}
-MINIKUBE=${MINIKUBE:="minikube"}
+MINIKUBE=${MINIKUBE:="sudo minikube"}
 KUBECTL=${KUBECTL:="kubectl"}
 PRELOADED_IMAGES=${PRELOADED_IMAGES:="vqfx-snap1 vqfx-snap2 vqfx-snap3 utility"}
 
@@ -103,22 +103,45 @@ sub_start(){
         fi
     fi
 
+    # sudo mkdir -p /antidote
+    # sudo ln -s /home/mierdin/Code/GO/src/github.com/nre-learning/nrelabs-curriculum/* /antidote 
+    # Or clone to /antidote
+
+    #TODO
+    # modprobe loop
+
+    # hugepages
+
+    # /etc/default/qemu-kvm, then modmprobe kvm-intel
+
+    # Install cni plugins
+    sudo mkdir -p /opt/cni/bin
+    curl -L -o cniplugins.tgz https://github.com/containernetworking/plugins/releases/download/v0.8.1/cni-plugins-linux-amd64-v0.8.1.tgz
+    sudo tar zxvf cniplugins.tgz -C /opt/cni/bin
+    sudo curl -L https://github.com/nre-learning/plugins/blob/master/bin/antibridge?raw=true -o /opt/cni/bin/antibridge && sudo chmod a+x /opt/cni/bin/antibridge
+    rm -f cniplugins.tgz
+
+    # Install multus config
+    sudo mkdir -p /etc/cni/net.d
+    sudo cp manifests/multus-cni.conf /etc/cni/net.d/1-multus.conf
+
     echo "Creating minikube cluster. This can take a few minutes, please be patient..."
     $MINIKUBE config set WantReportErrorPrompt false
-    $MINIKUBE start \
-    --mount --mount-string="$LESSON_DIRECTORY:/antidote" \
-    --cpus $CPUS --memory $MEMORY --vm-driver $VMDRIVER --network-plugin=cni --extra-config=kubelet.network-plugin=cni
+    $MINIKUBE start --cpus $CPUS --memory $MEMORY --vm-driver $VMDRIVER --network-plugin=cni --extra-config=kubelet.network-plugin=cni
 
-    set +e
-    scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $($MINIKUBE ssh-key) \
-        manifests/multus-cni.conf docker@$($MINIKUBE ip):/home/docker/multus.conf  > /dev/null 2>&1
-    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $($MINIKUBE ssh-key) -t docker@$($MINIKUBE ip) \
-        "sudo cp /home/docker/multus.conf /etc/cni/net.d/1-multus.conf"  > /dev/null 2>&1
-    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $($MINIKUBE ssh-key) -t docker@$($MINIKUBE ip) \
-        "sudo systemctl restart localkube"  > /dev/null 2>&1
-    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $($MINIKUBE ssh-key) -t docker@$($MINIKUBE ip) \
-        "sudo curl -L https://github.com/nre-learning/plugins/blob/master/bin/antibridge?raw=true -o /opt/cni/bin/antibridge && sudo chmod a+x /opt/cni/bin/antibridge"  > /dev/null 2>&1
-    set -e
+
+    # --mount --mount-string="$LESSON_DIRECTORY:/antidote" \
+
+    # set +e
+    # scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $($MINIKUBE ssh-key) \
+    #     manifests/multus-cni.conf docker@$($MINIKUBE ip):/home/docker/multus.conf  > /dev/null 2>&1
+    # ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $($MINIKUBE ssh-key) -t docker@$($MINIKUBE ip) \
+    #     "sudo cp /home/docker/multus.conf /etc/cni/net.d/1-multus.conf"  > /dev/null 2>&1
+    # ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $($MINIKUBE ssh-key) -t docker@$($MINIKUBE ip) \
+    #     "sudo systemctl restart localkube"  > /dev/null 2>&1
+    # ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $($MINIKUBE ssh-key) -t docker@$($MINIKUBE ip) \
+    #     "sudo curl -L https://github.com/nre-learning/plugins/blob/master/bin/antibridge?raw=true -o /opt/cni/bin/antibridge && sudo chmod a+x /opt/cni/bin/antibridge"  > /dev/null 2>&1
+    # set -e
 
     echo -e "\nThe minikube cluster ${WHITE}is now online${NC}. Now, we need to add some additional infrastructure components.\n"
     echo -e "\n${YELLOW}This will take some time${NC} - this script will pre-download large images so that you don't have to later. BE PATIENT.\n"

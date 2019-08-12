@@ -75,7 +75,7 @@ spec:
       volumes:
         - name: host-volume
           hostPath:
-            path: "/antidote"
+            path: "/home/mierdin/Code/GO/src/github.com/nre-learning/nrelabs-curriculum"
 
 ---
 kind: Service
