@@ -19,7 +19,7 @@ spec:
         ports:
         - containerPort: 4822
       - name: antidote-web
-        image: antidotelabs/antidote-web:latest
+        image: antidotelabs/antidote-web:release-v0.4.0
         imagePullPolicy: Always
         env:
         - name: GUACD_HOSTNAME
@@ -62,8 +62,8 @@ metadata:
   annotations:
     ingress.kubernetes.io/ingress.class: "nginx"
     ingress.kubernetes.io/ssl-services: "antidote-web"
-    ingress.kubernetes.io/ssl-redirect: "true"
-    ingress.kubernetes.io/force-ssl-redirect: "true"
+    ingress.kubernetes.io/ssl-redirect: "false"
+    ingress.kubernetes.io/force-ssl-redirect: "false"
     nginx.ingress.kubernetes.io/limit-connections: "10"
     nginx.ingress.kubernetes.io/limit-rps: "5"
   name: antidote-web-ingress
