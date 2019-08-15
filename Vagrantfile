@@ -109,6 +109,10 @@ Vagrant.configure("2") do |config|
   # Running initial selfmedicate script as the Vagrant user.
   $script = "/bin/bash --login $HOME/selfmedicate.sh start"
   config.vm.provision "custom", type: "shell", privileged: false, inline: $script
+  
+  # Start antidote on reload
+  $script = "/bin/bash --login $HOME/selfmedicate.sh resume"
+  config.vm.provision "reload", type: "shell", privileged: false, inline: $script, run: "always"
 
 end
 
