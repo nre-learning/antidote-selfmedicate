@@ -22,6 +22,7 @@ LESSON_DIRECTORY=${LESSON_DIRECTORY:="/antidote"}
 MINIKUBE=${MINIKUBE:="sudo minikube"}
 KUBECTL=${KUBECTL:="kubectl"}
 PRELOADED_IMAGES=${PRELOADED_IMAGES:="vqfx-snap1 vqfx-snap2 vqfx-snap3 utility"}
+K8SVERSION=${K8SVERSION:="v1.14.0"}  # Needs to reflect the targeted version the platform was built against.
 
 # Checking for prerequisites
 command -v $MINIKUBE > /dev/null
@@ -59,7 +60,12 @@ sub_resume(){
     fi
 
     $MINIKUBE start \
-        --cpus $CPUS --memory $MEMORY --vm-driver $VMDRIVER --network-plugin=cni --extra-config=kubelet.network-plugin=cni
+        --cpus $CPUS \
+        --memory $MEMORY \
+        --vm-driver $VMDRIVER \
+        --network-plugin=cni \
+        --extra-config=kubelet.network-plugin=cni \
+        --kubernetes-version=$K8SVERSION
 
     echo -e "${GREEN}Finished!${NC} Antidote should now be available at http://antidote-local:30001/"
 }
@@ -108,7 +114,12 @@ sub_start(){
     echo "Creating minikube cluster. This can take a few minutes, please be patient..."
     $MINIKUBE config set WantReportErrorPrompt false
     $MINIKUBE start \
-    --cpus $CPUS --memory $MEMORY --vm-driver $VMDRIVER --network-plugin=cni --extra-config=kubelet.network-plugin=cni
+    --cpus $CPUS \
+    --memory $MEMORY \
+    --vm-driver $VMDRIVER \
+    --network-plugin=cni \
+    --extra-config=kubelet.network-plugin=cni \
+    --kubernetes-version=v1.14.0  # Needs to reflect the targeted version the platform was built against.
 
     echo -e "\nThe minikube cluster ${WHITE}is now online${NC}. Now, we need to add some additional infrastructure components.\n"
     echo -e "\n${YELLOW}This will take some time${NC} - this script will pre-download large images so that you don't have to later. BE PATIENT.\n"
