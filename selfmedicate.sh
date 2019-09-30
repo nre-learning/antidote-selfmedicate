@@ -22,7 +22,8 @@ LESSON_DIRECTORY=${LESSON_DIRECTORY:="/antidote"}
 MINIKUBE=${MINIKUBE:="sudo minikube"}
 KUBECTL=${KUBECTL:="kubectl"}
 PRELOADED_IMAGES=${PRELOADED_IMAGES:="vqfx-snap1 vqfx-snap2 vqfx-snap3 utility"}
-K8SVERSION=${K8SVERSION:="v1.14.0"}  # Needs to reflect the targeted version the platform was built against.
+ANTIDOTEVERSION=${ANTIDOTEVERSION:="release-v0.4.0"}
+K8SVERSION=${K8SVERSION:="v1.14.0"}  # Needs to reflect the targeted version the Antidoteplatform was built against.
 
 # Checking for prerequisites
 command -v $MINIKUBE > /dev/null
@@ -200,6 +201,10 @@ sub_stop(){
 
 sub_debug(){
     debugs=(
+        "ls -lha $LESSON_DIRECTORY"
+
+        "docker run -v $LESSON_DIRECTORY:/antidote antidotelabs/syringe:$ANTIDOTEVERSION syrctl validate /antidote"
+
         "kubectl describe pods --all-namespaces"
         "kubectl describe services --all-namespaces"
         "kubectl describe network-attachment-definitions --all-namespaces"
