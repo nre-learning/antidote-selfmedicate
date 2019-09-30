@@ -198,6 +198,30 @@ sub_stop(){
     $MINIKUBE stop
 }
 
+sub_debug(){
+    debugs=(
+        "kubectl describe pods --all-namespaces"
+        "kubectl describe services --all-namespaces"
+        "kubectl describe network-attachment-definitions --all-namespaces"
+        "kubectl logs $(kubectl get pods | awk '/syringe/ {print $1;exit}')"
+
+        "kubectl -n=kube-system logs $(kubectl -n=kube-system get pods | awk '/multus/ {print $1;exit}')"
+    )
+
+    echo "Please wait while selfmedicate debug information is gathered..."
+
+    for i in "${debugs[@]}"
+    do
+        echo -e "\n=============================="
+        echo "$i"
+        echo -e "==============================\n"
+
+        eval $i
+    done
+
+    echo "Selfmedicate debug report complete."
+}
+
 while getopts "h" OPTION
 do
 	case $OPTION in
