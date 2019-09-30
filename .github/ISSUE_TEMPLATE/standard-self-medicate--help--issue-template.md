@@ -1,6 +1,6 @@
 ---
-name: Standard Self-Medicate "Help" Issue Template
-about: Provide a framework for folks to get help with selfmedicate via issues
+name: Help with Selfmedicate
+about: Select this if you're looking for help with selfmedicate.
 title: ''
 labels: ''
 assignees: ''
