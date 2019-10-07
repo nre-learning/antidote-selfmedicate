@@ -101,6 +101,10 @@ install_kubectl() {
   chmod +x ./kubectl
   # Move the binary into the PATH
   sudo mv ./kubectl /usr/local/bin/kubectl
+
+  # Enable kubectl autocompletion
+  echo 'source <(kubectl completion bash)' >>/home/vagrant/.bashrc
+
   # Verify Kubectl is installed
   if hash kubectl 2>/dev/null; then
         echo "Successfully installed kubectl"
