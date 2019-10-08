@@ -170,7 +170,7 @@ sub_start(){
     echo -ne "$pc%\033[0K\r"
     echo -ne $(print_progress 1) "${GREEN}Done.${NC}\n"
 	# Moved antidote up message to before image pull due to docker timeout issues.
-    echo -e "${GREEN}Finished!${NC} Antidote should now be available at http://antidote-local:30001/"
+    echo -e "${GREEN}Finished!${NC} Antidote should now be available at http://$($MINIKUBE ip):30001/"
 
     # Pre-download large common images
     for i in $(echo $PRELOADED_IMAGES)
