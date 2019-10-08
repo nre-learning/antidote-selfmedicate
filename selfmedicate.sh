@@ -17,6 +17,7 @@ fi
 
 CPUS=${CPUS:=2}
 MEMORY=${MEMORY:=8192}
+# Possible values for VMDRIVER match minikube's 'vm-driver' option (see https://minikube.sigs.k8s.io/docs/reference/drivers/)
 VMDRIVER=${VMDRIVER:="none"}
 LESSON_DIRECTORY=${LESSON_DIRECTORY:="/antidote"}
 MINIKUBE=${MINIKUBE:="sudo minikube"}
