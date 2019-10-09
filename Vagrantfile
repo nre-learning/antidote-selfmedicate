@@ -93,7 +93,7 @@ Vagrant.configure("2") do |config|
   # end
 
   # /shared
-  config.vm.synced_folder "../nrelabs-curriculum", "/antidote", type: "nfs"
+  config.vm.synced_folder "../nrelabs-curriculum", "/antidote"
 
   # Disable default synced folder
   config.vm.synced_folder ".", "/vagrant", disabled: true
