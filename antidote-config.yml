@@ -11,3 +11,12 @@ vm_config:
   memory: 8192
   cores: 2
   provider: virtualbox
+
+# Providing a value for options supported by the
+# selfmedicate.sh script, relevant in the Vagrant context. For the
+# moment PRELOADED_IMAGES
+# For instance:
+#
+#selfmedicate_prefs:
+#  PRELOADED_IMAGES: ["utility", "vqfx-snap1"]
+  

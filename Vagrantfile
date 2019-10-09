@@ -27,6 +27,11 @@ if defined? antidote_config['vm_config']['provider'] then
   ENV['VAGRANT_DEFAULT_PROVIDER'] = antidote_config['vm_config']['provider']
 end
 
+# Allow customization of the option passed to the selfmedicate.sh provisionning script
+if defined? antidote_config['selfmedicate_prefs']['PRELOADED_IMAGES'] then
+  ENV['SELFMEDICATE_PRELOADED_IMAGES'] = antidote_config['selfmedicate_prefs']['PRELOADED_IMAGES'].join(' ')
+end
+
 ## Configure VAGRANT Variables
 trimmed_version = antidote_config['version'].to_s.tr('.','')
 antidote_config['hostname'] = "antidote-#{trimmed_version}"
@@ -108,7 +113,7 @@ Vagrant.configure("2") do |config|
   
   # Running initial selfmedicate script as the Vagrant user.
   $script = "/bin/bash --login $HOME/selfmedicate.sh start"
-  config.vm.provision "custom", type: "shell", privileged: false, inline: $script
+  config.vm.provision "custom", type: "shell", privileged: false, inline: $script, env: {"PRELOADED_IMAGES" => ENV['SELFMEDICATE_PRELOADED_IMAGES']}
   
   # Start antidote on reload
   $script = "/bin/bash --login $HOME/selfmedicate.sh resume"
