@@ -25,9 +25,6 @@ PRELOADED_IMAGES=${PRELOADED_IMAGES:="vqfx-snap1 vqfx-snap2 vqfx-snap3 utility"}
 ANTIDOTEVERSION=${ANTIDOTEVERSION:="release-v0.4.0"}
 K8SVERSION=${K8SVERSION:="v1.14.0"}  # Needs to reflect the targeted version the Antidoteplatform was built against.
 
-if [ "$VMDRIVER" != "none" ]; then
-    echo -e "\n${YELLOW}You have set VMDRIVER to a specific driver ($VMDRIVER).${NC} Be reminded that this selfmedicate script was designed to be run inside a Vagrant VM, spawning minikube with baremetal mode.\n"    
-fi
 # Checking for prerequisites
 command -v $MINIKUBE > /dev/null
 if [ $? -ne 0 ]; then
