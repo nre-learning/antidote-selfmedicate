@@ -19,4 +19,4 @@ vm_config:
 #
 #selfmedicate_prefs:
 #  PRELOADED_IMAGES: ["utility", "vqfx-snap1"]
-  
+#  KUBERNETES_VERSION: "v1.14.8"

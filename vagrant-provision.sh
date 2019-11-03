@@ -94,9 +94,14 @@ setup_docker() {
 }
 
 install_kubectl() {
-  # Download the latest version of kubectl
-  echo "Installing Kubectl"
-  curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl &>/dev/null
+  if [[ $K8SVERSION = v* ]]; then
+     echo "Installing Kubectl version $K8SVERSION"
+     curl -LO https://storage.googleapis.com/kubernetes-release/release/$K8SVERSION/bin/linux/amd64/kubectl &>/dev/null
+  else 
+     # Download the latest version of kubectl
+     echo "Installing Kubectl"
+     curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl &>/dev/null
+  fi
   # Make the kubectl binary executable
   chmod +x ./kubectl
   # Move the binary into the PATH
