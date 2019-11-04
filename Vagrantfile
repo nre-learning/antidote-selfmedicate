@@ -31,7 +31,7 @@ end
 if defined? antidote_config['selfmedicate_prefs']['PRELOADED_IMAGES'] then
   ENV['SELFMEDICATE_PRELOADED_IMAGES'] = antidote_config['selfmedicate_prefs']['PRELOADED_IMAGES'].join(' ')
 end
-if defined? antidote_config['selfmedicate_prefs']['KUBERNETES_VERSION'] then
+if antidote_config['selfmedicate_prefs']['KUBERNETES_VERSION'] then
   ENV['KUBERNETES_VERSION'] = antidote_config['selfmedicate_prefs']['KUBERNETES_VERSION']
 end
 
