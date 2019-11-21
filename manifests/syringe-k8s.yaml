@@ -110,12 +110,8 @@ metadata:
   name: syringe-ingress
   namespace: default
 spec:
-  tls:
-    - hosts:
-      - antidote-local
   rules:
-  - host: "antidote-local"
-    http:
+  - http:
       paths:
       - path: "/syringe"
         backend:

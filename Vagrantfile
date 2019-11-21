@@ -86,12 +86,6 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "Antidote #{antidote_config['version']}"
 
-  # Please see (https://github.com/cogitatio/vagrant-hostsupdater) for more information
-  if defined?(VagrantPlugins::HostsUpdater)
-     config.hostsupdater.aliases = ["antidote-local"]
-     config.hostsupdater.remove_on_suspend = false
-  end
-
   config.vm.network :private_network, id: "antidote_primary", ip: antidote_config['vm_config']['private_network_ip']
 
   config.vm.network "forwarded_port", guest: 30001, host: 30001
