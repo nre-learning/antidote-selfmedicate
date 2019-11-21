@@ -75,7 +75,7 @@ Vagrant.configure("2") do |config|
     v.memory = antidote_config['vm_config']['memory']
     v.cpus = antidote_config['vm_config']['cores']
     v.nested = true
-    override.vm.config = "generic/ubuntu1604"
+    override.vm.box = "generic/ubuntu1604"
   end
 
 
