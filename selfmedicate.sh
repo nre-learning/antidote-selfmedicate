@@ -120,7 +120,7 @@ sub_start(){
     --vm-driver $VMDRIVER \
     --network-plugin=cni \
     --extra-config=kubelet.network-plugin=cni \
-    --kubernetes-version=v1.14.0  # Needs to reflect the targeted version the platform was built against.
+    --kubernetes-version=$K8SVERSION  # Needs to reflect the targeted version the platform was built against.
 
     echo -e "\nThe minikube cluster ${WHITE}is now online${NC}. Now, we need to add some additional infrastructure components.\n"
     echo -e "\n${YELLOW}This will take some time${NC} - this script will pre-download large images so that you don't have to later. BE PATIENT.\n"
