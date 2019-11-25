@@ -86,6 +86,8 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "Antidote #{antidote_config['version']}"
 
+  # Warning, this interface is referred to  in selfmedicate.sh, and used to display the address through which
+  # the user can access `antidote-web`. Change with caution.
   config.vm.network :private_network, id: "antidote_primary", ip: antidote_config['vm_config']['private_network_ip']
 
   config.vm.network "forwarded_port", guest: 30001, host: 30001
