@@ -172,6 +172,9 @@ sub_start(){
 	# Moved antidote up message to before image pull due to docker timeout issues.
     echo -e "${GREEN}Finished!${NC} Antidote should now be available at http://antidote-local:30001/"
 
+    # Load docker images from local drive before attempting to download
+    load_docker_images
+
     # Pre-download large common images
     for i in $(echo $PRELOADED_IMAGES)
     do
@@ -225,6 +228,19 @@ sub_debug(){
     done
 
     echo "Selfmedicate debug report complete."
+}
+
+load_docker_images() {
+  # Load images
+  for image in $(find "/images" -name \*.tar); do
+    echo "Loading $image"
+    sudo docker load -i $image
+  done
+  # Load images that were processed with gzip
+  for image in $(find "/images" -name \*.tar.gz); do
+    echo "Loading $image"
+    sudo docker load -i $image
+  done
 }
 
 while getopts "h" OPTION
