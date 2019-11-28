@@ -108,6 +108,7 @@ Vagrant.configure("2") do |config|
   
   # Copy selfmedicate and the manifests folder to the VM.
   config.vm.provision "file", source: "selfmedicate.sh", destination: "$HOME/selfmedicate.sh"
+  config.vm.provision "file", source: "container-start.sh", destination: "$HOME/container-start.sh"
   config.vm.provision "file", source: "manifests", destination: "$HOME/manifests"
   
   # Provisioning antidote vagrant vm

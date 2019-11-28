@@ -68,6 +68,8 @@ sub_resume(){
         --extra-config=kubelet.network-plugin=cni \
         --kubernetes-version=$K8SVERSION
 
+    bash container-start.sh wait_system
+    bash container-start.sh wait_platform
     echo -e "${GREEN}Finished!${NC} Antidote should now be available at http://antidote-local:30001/"
 }
 
@@ -127,48 +129,8 @@ sub_start(){
 	
 	sudo chown -R $USER $HOME/.kube $HOME/.minikube
 	
-    $KUBECTL apply -f "https://cloud.weave.works/k8s/net?k8s-version=$($KUBECTL version | base64 | tr -d '\n')"
-    $KUBECTL create -f manifests/multusinstall.yml
+    bash container-start.sh run
 
-    print_progress() {
-        percentage=$1
-        chars=$(echo "40 * $percentage"/1| bc)
-        v=$(printf "%-${chars}s" "#")
-        s=$(printf "%-$((40 - chars))s")
-        echo "${v// /#}""${s// /-}"
-    }
-
-    running_system_pods=0
-    total_system_pods=$($KUBECTL get pods -n=kube-system | tail -n +2 | wc -l)
-    while [ $running_system_pods -lt $total_system_pods ]
-    do
-        running_system_pods=$($KUBECTL get pods -n=kube-system | grep Running | wc -l)
-        percentage="$( echo "$running_system_pods/$total_system_pods" | bc -l )"
-        echo -ne $(print_progress $percentage) "${YELLOW}Installing additional infrastructure components...${NC}\r"
-        sleep 5
-    done
-
-    # Clear line and print finished progress
-    echo -ne "$pc%\033[0K\r"
-    echo -ne $(print_progress 1) "${GREEN}Done.${NC}\n"
-
-    $KUBECTL create -f manifests/nginx-controller.yaml > /dev/null
-    $KUBECTL create -f manifests/syringe-k8s.yaml > /dev/null
-    $KUBECTL create -f manifests/antidote-web.yaml > /dev/null
-
-    running_platform_pods=0
-    total_platform_pods=$($KUBECTL get pods | tail -n +2 | wc -l)
-    while [ $running_platform_pods -lt $total_platform_pods ]
-    do
-        running_platform_pods=$($KUBECTL get pods | grep Running | wc -l)
-        percentage="$( echo "$running_platform_pods/$total_platform_pods" | bc -l )"
-        echo -ne $(print_progress $percentage) "${YELLOW}Starting the antidote platform...${NC}\r"
-        sleep 5
-    done
-
-    # Clear line and print finished progress
-    echo -ne "$pc%\033[0K\r"
-    echo -ne $(print_progress 1) "${GREEN}Done.${NC}\n"
 	# Moved antidote up message to before image pull due to docker timeout issues.
     echo -e "${GREEN}Finished!${NC} Antidote should now be available at http://antidote-local:30001/"
 
