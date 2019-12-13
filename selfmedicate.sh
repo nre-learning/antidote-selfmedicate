@@ -155,6 +155,7 @@ sub_start(){
     $KUBECTL create -f manifests/nginx-controller.yaml > /dev/null
     $KUBECTL create -f manifests/syringe-k8s.yaml > /dev/null
     $KUBECTL create -f manifests/antidote-web.yaml > /dev/null
+    $KUBECTL create -f manifests/webssh2.yaml > /dev/null
 
     running_platform_pods=0
     total_platform_pods=$($KUBECTL get pods | tail -n +2 | wc -l)
