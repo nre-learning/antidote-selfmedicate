@@ -131,7 +131,7 @@ spec:
       containers: 
         - args: 
             - /nginx-ingress-controller
-            - "--default-backend-service=$(POD_NAMESPACE)/antidote-web"
+            - "--default-backend-service=$(POD_NAMESPACE)/aweb"
           env: 
             - name: POD_NAME
               valueFrom: 
