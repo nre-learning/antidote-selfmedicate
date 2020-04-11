@@ -1,0 +1,187 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: antidotesa
+  namespace: default
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: antidote-role
+  namespace: default
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- nonResourceURLs:
+  - '*'
+  verbs:
+  - '*'
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: antidote-binding
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: antidote-role
+subjects:
+  - kind: ServiceAccount
+    name: antidotesa
+    namespace: default
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: acore-conf
+  labels:
+    name: acore-conf
+data:
+  antidote-config.yml: |-
+    curriculumDir: /curriculum
+    instanceId: selfmedicate
+    alwaysPull: false
+    tier: local
+    domain: antidote-local
+    enabledServices:
+    - api
+    - stats
+    - scheduler
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: acore
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  template: 
+    metadata:
+      name:  acore
+      labels:
+        app:  acore
+        antidote_role: infra
+    spec:
+      initContainers:
+      - name: copy-local-files
+        image: antidotelabs/deployer
+        env:
+        - name: SOURCE_DIR
+          value: /antidote-ro
+        - name: DEST_DIR
+          value: /curriculum
+        command:
+        - /copy.sh
+        volumeMounts:
+          - mountPath: /curriculum
+            name: local-copy
+            readOnly: false
+          - mountPath: /antidote-ro
+            name: host-volume
+            readOnly: true
+      serviceAccount:  antidotesa
+      containers:
+      - name: acore
+        image: antidotelabs/antidote-core:latest  # TEMPORARY - will be set to 0.6.0 after release
+        imagePullPolicy: Always
+        ports:
+        # Only accessible from within the container
+        # - containerPort: 50099  # GRPC
+        - containerPort: 8086   # REST/HTTP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8086
+        volumeMounts:
+          - name: antidote-config-volume
+            mountPath: /etc/antidote/
+          - mountPath: /curriculum
+            name: local-copy
+            readOnly: false
+          - mountPath: /antidote-ro
+            name: host-volume
+            readOnly: true
+      - image: nats
+        name: nats
+        ports:
+        - containerPort: 4222
+          protocol: TCP
+        - containerPort: 6222
+          protocol: TCP
+        - containerPort: 8222
+          protocol: TCP
+      - image: jaegertracing/jaeger-agent:1.9  # Ensure this matches what's deployed in the jaeger collector deployment
+        name: jaeger-agent
+        ports:
+        - containerPort: 5775
+          protocol: UDP
+        - containerPort: 6831
+          protocol: UDP
+        - containerPort: 6832
+          protocol: UDP
+        - containerPort: 5778
+          protocol: TCP
+        # args: ["--reporter.grpc.host-port=127.0.0.1:30840"]
+        # args: ["--reporter.grpc.host-port=jaeger:14267"]
+        args: ["--collector.host-port=jaeger.prod.svc.cluster.local:14267"]  #OLD
+        # NOTE that grpc probably has a different port. Might want to label things properly and link to docs
+        # also for testing if you're using nodeport might want to pick your ports so they don't change.
+
+      volumes:
+        - name: antidote-config-volume
+          configMap:
+            defaultMode: 420
+            name: acore-conf
+        - name: host-volume
+          hostPath:
+            path: "/curriculum"
+        - name: local-copy
+          emptyDir: {}
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: acore
+spec:
+  selector:
+    app: acore
+  ports:
+    # Only enable HTTP - grpc only accessible within the pod
+    - name: http
+      port: 8086
+      targetPort: 8086
+  type: ClusterIP
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/ssl-services: "acore"
+    ingress.kubernetes.io/ssl-redirect: "false"
+    ingress.kubernetes.io/force-ssl-redirect: "false"
+    ingress.kubernetes.io/rewrite-target: "/"
+    nginx.ingress.kubernetes.io/rewrite-target: "/"
+  name: acore-ingress
+  namespace: default
+spec:
+  rules:
+  - http:
+      paths:
+      - path: "/acore"
+        backend:
+          serviceName: acore
+          servicePort: 8086

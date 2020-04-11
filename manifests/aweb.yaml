@@ -1,0 +1,62 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata: 
+  name: aweb
+spec: 
+  replicas: 1
+  revisionHistoryLimit: 3
+  template: 
+    metadata:
+      name: aweb
+      labels:
+        app: aweb
+        antidote_role: infra
+    spec:
+      containers:
+      - name: aweb
+        image: antidotelabs/antidote-web:latest  # TEMPORARY - will be set to 0.6.0 after release
+        imagePullPolicy: Always
+        env:
+        - name: WEBSSH2_LOCATION
+          value: "http://antidote-local:30010"
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: aweb
+spec:
+  selector:
+    app: aweb
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/ssl-services: "aweb"
+    ingress.kubernetes.io/ssl-redirect: "false"
+    ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/limit-connections: "10"
+    nginx.ingress.kubernetes.io/limit-rps: "5"
+  name: aweb
+spec:
+  rules:
+  - http:
+      paths:
+      - path: "/"
+        backend:
+          serviceName: aweb
+          servicePort: 80

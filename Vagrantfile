@@ -95,13 +95,15 @@ Vagrant.configure("2") do |config|
   config.vm.network :private_network, id: "antidote_primary", ip: antidote_config['vm_config']['private_network_ip']
 
   config.vm.network "forwarded_port", guest: 30001, host: 30001
+  # Temporary to enable webssh2 - should be made available via ingress ASAP
+  config.vm.network "forwarded_port", guest: 30010, host: 30010
 
   # config.vm.provider :hyperv do |v, override|
   #   override.vm.network :private_network, id: "vvv_primary", ip: nil
   # end
 
   # /shared
-  config.vm.synced_folder "../nrelabs-curriculum", "/antidote"
+  config.vm.synced_folder "../nrelabs-curriculum", "/curriculum"
 
   # Disable default synced folder
   config.vm.synced_folder ".", "/vagrant", disabled: true

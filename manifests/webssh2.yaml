@@ -1,0 +1,35 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: webssh2
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  template:
+    metadata:
+      name: webssh2
+      labels:
+        app: webssh2
+    spec:
+      containers:
+      - name: webssh2
+        image: antidotelabs/webssh2:ssh-auth
+        # imagePullPolicy: Never
+        ports:
+          - containerPort: 8080
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: webssh2
+spec:
+  selector:
+    app: webssh2
+  ports:
+    - name: http
+      port: 8080
+      nodePort: 30010
+      targetPort: 8080
+  type: NodePort
