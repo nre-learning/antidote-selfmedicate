@@ -1,0 +1,73 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata: 
+  name: jaeger
+spec: 
+  replicas: 1
+  revisionHistoryLimit: 3
+  template: 
+    metadata:
+      name: jaeger
+      annotations:
+        foobar: ""
+      labels:
+        app: jaeger
+        antidote_role: infra
+    spec:
+      containers:
+      - name: jaeger
+        image: jaegertracing/all-in-one:1.9
+        env:
+        - name: COLLECTOR_ZIPKIN_HTTP_PORT
+          value: "9411"
+        ports:
+        - containerPort: 5775
+          protocol: UDP
+        - containerPort: 6831
+          protocol: UDP
+        - containerPort: 6832
+          protocol: UDP
+        - containerPort: 5778
+        - containerPort: 16686
+        - containerPort: 14268
+        - containerPort: 9411
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: jaeger
+  namespace: default
+spec:
+  selector:
+    app: jaeger
+  ports:
+    # https://www.jaegertracing.io/docs/1.17/getting-started/
+    - name: zipkin-thrift-deprecated
+      port: 5775
+      targetPort: 5775
+      protocol: UDP
+    - name: compact-thrift
+      port: 6831
+      targetPort: 6831
+      protocol: UDP
+    - name: binary-thrift
+      port: 6832
+      targetPort: 6832
+      protocol: UDP
+    - name: serve-configs
+      port: 5778
+      targetPort: 5778
+    - name: port-16686
+      port: 16686
+      targetPort: 16686
+      nodePort: 30086
+    - name: port-14267
+      port: 14267
+      targetPort: 14267
+      nodePort: 30007
+    - name: port-9411
+      port: 9411
+      targetPort: 9411
+  type: NodePort

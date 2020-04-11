@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
       - name: webssh2
-        image: antidotelabs/webssh2:latest
-        imagePullPolicy: Always
+        image: antidotelabs/webssh2:ssh-auth
+        imagePullPolicy: Never
         ports:
           - containerPort: 8080
 

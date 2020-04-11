@@ -1,13 +1,13 @@
 ---
 
 # Antidote Version
-version: "0.4.0"
+version: "0.6.0"
 
 # Customizable configuration options are provided here for the vagrant up command.
 # This is used in conjuction with the vagrantfile.  Any changes in this file require
 # vagrant reload --provision
 #
 vm_config:
-  memory: 8192
+  memory: 4096
   cores: 2
   provider: virtualbox

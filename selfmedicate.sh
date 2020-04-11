@@ -18,10 +18,11 @@ fi
 CPUS=${CPUS:=2}
 MEMORY=${MEMORY:=8192}
 VMDRIVER=${VMDRIVER:="none"}
-LESSON_DIRECTORY=${LESSON_DIRECTORY:="/antidote"}
+LESSON_DIRECTORY=${LESSON_DIRECTORY:="/curriculum"}
 MINIKUBE=${MINIKUBE:="sudo minikube"}
 KUBECTL=${KUBECTL:="kubectl"}
-PRELOADED_IMAGES=${PRELOADED_IMAGES:="vqfx-snap1 vqfx-snap2 vqfx-snap3 utility"}
+# PRELOADED_IMAGES=${PRELOADED_IMAGES:="vqfx-snap1 vqfx-snap2 vqfx-snap3 utility"}
+PRELOADED_IMAGES=${PRELOADED_IMAGES:=""}
 ANTIDOTEVERSION=${ANTIDOTEVERSION:="release-v0.4.0"}
 K8SVERSION=${K8SVERSION:="v1.14.0"}  # Needs to reflect the targeted version the Antidoteplatform was built against.
 
@@ -153,9 +154,10 @@ sub_start(){
     echo -ne $(print_progress 1) "${GREEN}Done.${NC}\n"
 
     $KUBECTL create -f manifests/nginx-controller.yaml > /dev/null
-    $KUBECTL create -f manifests/syringe-k8s.yaml > /dev/null
-    $KUBECTL create -f manifests/antidote-web.yaml > /dev/null
+    $KUBECTL create -f manifests/acore.yaml > /dev/null
+    $KUBECTL create -f manifests/aweb.yaml > /dev/null
     $KUBECTL create -f manifests/webssh2.yaml > /dev/null
+    $KUBECTL create -f manifests/jaeger.yaml > /dev/null
 
     running_platform_pods=0
     total_platform_pods=$($KUBECTL get pods | tail -n +2 | wc -l)
@@ -204,7 +206,7 @@ sub_debug(){
     debugs=(
         "ls -lha $LESSON_DIRECTORY"
 
-        "docker run -v $LESSON_DIRECTORY:/antidote antidotelabs/syringe:$ANTIDOTEVERSION syrctl validate /antidote"
+        # "docker run -v $LESSON_DIRECTORY:/antidote antidotelabs/syringe:$ANTIDOTEVERSION syrctl validate /antidote"
 
         "kubectl describe pods --all-namespaces"
         "kubectl describe services --all-namespaces"
