@@ -75,12 +75,12 @@ Vagrant.configure("2") do |config|
     v.memory = antidote_config['vm_config']['memory']
     v.cpus = antidote_config['vm_config']['cores']
     v.nested = true
-    override.vm.box = "generic/ubuntu1604"
+    override.vm.box = "generic/ubuntu1804"
   end
 
 
   # Base Ubuntu Box
-  config.vm.box = "bento/ubuntu-16.04"
+  config.vm.box = "bento/ubuntu-18.04"
 
   config.vm.hostname = "antidote-#{antidote_config['version'].to_s.tr('.', '')}"
 
