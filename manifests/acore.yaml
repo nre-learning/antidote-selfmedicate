@@ -93,7 +93,7 @@ spec:
       serviceAccount:  antidotesa
       containers:
       - name: acore
-        image: antidotelabs/antidote-core:latest  # TEMPORARY - will be set to 0.6.0 after release
+        image: antidotelabs/antidote-core:release-v0.6.0
         imagePullPolicy: Always
         ports:
         # Only accessible from within the container
