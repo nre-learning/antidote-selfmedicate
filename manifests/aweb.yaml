@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: aweb
-        image: antidotelabs/antidote-web:latest  # TEMPORARY - will be set to 0.6.0 after release
+        image: antidotelabs/antidote-web:release-v0.6.0
         imagePullPolicy: Always
         env:
         - name: WEBSSH2_LOCATION
