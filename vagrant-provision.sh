@@ -147,4 +147,5 @@ install_minikube
 export CHANGE_MINIKUBE_NONE_USER
 echo "export CHANGE_MINIKUBE_NONE_USER=true" >> /etc/profile.d/vagrant.sh
 chmod +x /home/vagrant/selfmedicate.sh
+chmod +x /home/vagrant/container-start.sh
 echo "done"
