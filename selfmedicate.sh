@@ -117,12 +117,17 @@ sub_start(){
 	sudo cp manifests/multus-cni.conf /etc/cni/net.d/1-multus.conf
     echo "Creating minikube cluster. This can take a few minutes, please be patient..."
     $MINIKUBE config set WantReportErrorPrompt false
+    # Avoid CoreDNS loop caused by systemd's local DNS cache
+    if [ "$VMDRIVER" = "none" ]; then
+        EXTRA_PARAMS="--extra-config=kubelet.resolv-conf=/run/systemd/resolve/resolv.conf"
+    fi
     $MINIKUBE start \
     --cpus $CPUS \
     --memory $MEMORY \
     --vm-driver $VMDRIVER \
     --network-plugin=cni \
     --extra-config=kubelet.network-plugin=cni \
+    $EXTRA_PARAMS \
     --kubernetes-version=$K8SVERSION  # Needs to reflect the targeted version the platform was built against.
 
     echo -e "\nThe minikube cluster ${WHITE}is now online${NC}. Now, we need to add some additional infrastructure components.\n"
