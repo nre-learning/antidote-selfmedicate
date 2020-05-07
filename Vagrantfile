@@ -110,7 +110,9 @@ Vagrant.configure("2") do |config|
   
   # Copy selfmedicate and the manifests folder to the VM.
   config.vm.provision "file", source: "selfmedicate.sh", destination: "$HOME/selfmedicate.sh"
-  config.vm.provision "file", source: "manifests", destination: "$HOME/manifests"
+  #config.vm.provision "file", source: "manifests", destination: "$HOME/manifests"
+  # Woraround bug in older Vagrant versions using rsync instead of file
+  config.vm.synced_folder "manifests", "/home/vagrant/manifests"
   
   # Provisioning antidote vagrant vm
   # This will install docker, kubectl and minikube
