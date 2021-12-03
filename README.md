@@ -1,3 +1,6 @@
+| :exclamation:  NOTE - this project has been archived. Please see [this blog post](https://nrelabs.io/2021/12/goodbye-for-now/) for more details.  :exclamation:  |
+|-----------------------------------------|
+
 # antidote-selfmedicate
 
 This is where you can set up a development environment for antidote
