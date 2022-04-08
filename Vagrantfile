@@ -27,6 +27,14 @@ if defined? antidote_config['vm_config']['provider'] then
   ENV['VAGRANT_DEFAULT_PROVIDER'] = antidote_config['vm_config']['provider']
 end
 
+# Allow customization of the option passed to the selfmedicate.sh provisionning script
+if defined? antidote_config['selfmedicate_prefs']['PRELOADED_IMAGES'] then
+  ENV['SELFMEDICATE_PRELOADED_IMAGES'] = antidote_config['selfmedicate_prefs']['PRELOADED_IMAGES'].join(' ')
+end
+if antidote_config['selfmedicate_prefs']['KUBERNETES_VERSION'] then
+  ENV['KUBERNETES_VERSION'] = antidote_config['selfmedicate_prefs']['KUBERNETES_VERSION']
+end
+
 ## Configure VAGRANT Variables
 trimmed_version = antidote_config['version'].to_s.tr('.','')
 antidote_config['hostname'] = "antidote-#{trimmed_version}"
@@ -115,11 +123,11 @@ Vagrant.configure("2") do |config|
   
   # Provisioning antidote vagrant vm
   # This will install docker, kubectl and minikube
-  config.vm.provision "default", type: "shell", path: "vagrant-provision.sh", env: {CHANGE_MINIKUBE_NONE_USER: true}
+  config.vm.provision "default", type: "shell", path: "vagrant-provision.sh", env: {CHANGE_MINIKUBE_NONE_USER: true, "K8SVERSION" => ENV['KUBERNETES_VERSION']}
   
   # Running initial selfmedicate script as the Vagrant user.
   $script = "/bin/bash --login $HOME/selfmedicate.sh start"
-  config.vm.provision "custom", type: "shell", privileged: false, inline: $script
+  config.vm.provision "custom", type: "shell", privileged: false, inline: $script, env: {"PRELOADED_IMAGES" => ENV['SELFMEDICATE_PRELOADED_IMAGES'], "K8SVERSION" => ENV['KUBERNETES_VERSION']}
   
   # Start antidote on reload
   $script = "/bin/bash --login $HOME/selfmedicate.sh resume"
